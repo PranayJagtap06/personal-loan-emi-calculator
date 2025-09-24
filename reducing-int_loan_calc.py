@@ -74,7 +74,7 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
 
     # if save_file:
     file_path = workbook.save(f'reducing_interest_rate_loan_sheet-₹{principle_amt}-{months_time}yrs.xlsx')
-    df = pd.read_excel(file_path)
+    df = pd.read_excel(file_path, engine='openpyxl')
 
     return df
 
