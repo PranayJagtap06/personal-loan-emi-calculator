@@ -1,11 +1,13 @@
 #!/home/mage/miniconda3/envs/ml_env/bin/ python3
 """reducing_int_loan_calc.py."""
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 import streamlit as st
-from typing import Optional
 from openpyxl import Workbook
+
 
 def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, months_time: Optional[int] = None, emi: Optional[float] = None, save_file: bool = False):
     """Reducing interest rate loan calculator."""
@@ -72,7 +74,7 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
 
     # if save_file:
     file_path = workbook.save(f'reducing_interest_rate_loan_sheet-₹{principle_amt}-{months_time}yrs.xlsx')
-    df = pd.read_excel()
+    df = pd.read_excel(file_path)
 
     return df
 
