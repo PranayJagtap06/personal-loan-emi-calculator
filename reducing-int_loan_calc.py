@@ -17,7 +17,7 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
             emi, principle_amt*monthly_int_rate))), np.log(1+monthly_int_rate))))
     if emi is None:
         emi = round(np.divide(np.multiply(np.multiply(principle_amt, monthly_int_rate), np.pow(
-            1 + monthly_int_rate, months_time)), np.pow(1 + monthly_int_rate, months_time - 1)), 2)
+            1 + monthly_int_rate, months_time)), np.pow(1 + monthly_int_rate, months_time) - 1), 2)
 
     print(f"{principle_amt=}\ninterest_rate={interest_rate}%\n{months_time=}\n")
     new_principle: float = principle_amt  # Principle amount remaining after paying EMI
@@ -73,7 +73,7 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
     print(dashes)
 
     # if save_file:
-    file_name = f'reducing_interest_rate_loan_sheet-₹{principle_amt}-{months_time}yrs.xlsx'
+    file_name = f'reducing_interest_rate_loan_sheet-Rs{principle_amt}-{months_time}yrs.xlsx'
     workbook.save(file_name)
     df = pd.read_excel(file_name, engine='openpyxl')
 
