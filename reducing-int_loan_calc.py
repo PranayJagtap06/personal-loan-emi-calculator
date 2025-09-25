@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from openpyxl import Workbook
+from xhtml2pdf import pisa
 
 
 def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, months_time: Optional[int] = None, emi: Optional[float] = None, save_file: bool = False):
@@ -52,7 +53,8 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
         interest: float = round(np.multiply(new_principle, monthly_int_rate), 2)  # Interest to be deducted from EMI
         interest_array = np.append(interest_array, interest)
         pay_principle: float = round(np.subtract(emi, interest), 2)  # Amount to be paid towards principle amount
-        pay_to_principle_array = np.append(pay_to_principle_array, pay_principle)
+        if pay_principle > 0:
+            pay_to_principle_array = np.append(pay_to_principle_array, pay_principle)   
 
         sheet.append({'A': t+1, 'B': new_principle, 'C': emi, 'D': interest, 'E': pay_principle})
 
@@ -72,12 +74,52 @@ def reducing_intrest_loan_calc(principle_amt: float, interest_rate: float, month
     print(logs3)
     print(dashes)
 
-    # if save_file:
     file_name = f'reducing_interest_rate_loan_sheet-Rs{principle_amt}-{months_time}yrs.xlsx'
     workbook.save(file_name)
     df = pd.read_excel(file_name, engine='openpyxl')
 
-    return df
+    # Convert DataFrame to HTML
+    html_string = df.to_html(index=False)
+
+    # Add CSS to the HTML string
+    html_string = f"""
+    <html>
+      <head>
+        <b>Personal Loan EMI Breakdown</b><br>
+        <b>Principal Amount:</b> ₹{principle_amt}<br>
+        <b>Interest Rate:</b> {interest_rate}%<br>
+        <b>Loan Tenure:</b> {months_time} months<br>
+        <b>EMI Amount:</b> ₹{emi}<br><br>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+          body {{
+            font-family: 'Noto Sans', sans-serif;
+          }}
+          table, th, td {{
+            border: 1px solid black;
+            border-collapse: collapse;
+          }}
+          th, td {{
+            padding: 3px;
+            text-align: left;
+            vertical-align: middle;
+          }}
+        </style>
+      </head>
+      <body>
+        {html_string}
+      </body>
+    </html>
+    """
+
+    # Convert HTML to PDF
+    pdf_file_name = f'reducing_interest_rate_loan_sheet-Rs{principle_amt}-{months_time}yrs.pdf'
+    with open(pdf_file_name, "w+b") as f:
+        pisa_status = pisa.CreatePDF(
+            html_string,                # the HTML to convert
+            dest=f)           # file handle to receive result
+
+    return df, pdf_file_name
 
 
 # Setup page
@@ -132,19 +174,26 @@ emi: float = st.number_input(
     help="Enter the EMI amount you can afford to pay each month.",
 )
 
-calc_tenure: bool = st.checkbox(label="Calculate Loan Tenure for an EMI Amount (₹)", value=False, help="Check this box if you want to calculate the Loan Tenure based on the principal amount, interest rate, and EMI. Leave it unchecked if you want to calculate your EMI.")
+# calc_tenure: bool = st.checkbox(label="Calculate Loan Tenure for an EMI Amount (₹)", value=False, help="Check this box if you want to calculate the Loan Tenure based on the principal amount, interest rate, and EMI. Leave it unchecked if you want to calculate your EMI.")
 
 # if __name__ == "__main__":
 #     reducing_intrest_loan_calc(200000.0, 9.5, 36)
 
 
 if st.button(label="Calculate EMI Breakdown"):
-    if calc_tenure:
-        df = reducing_intrest_loan_calc(prncpl_amt, interest_rate, emi=emi, save_file=True)
-    else:
-        df = reducing_intrest_loan_calc(prncpl_amt, interest_rate, months_time=tenure, save_file=True)
-    st.success("EMI Breakdown calculated and saved as Excel file successfully!")
+    # if calc_tenure:
+        # df, pdf_file = reducing_intrest_loan_calc(prncpl_amt, interest_rate, emi=emi, save_file=True)
+    # else:
+    df, pdf_file = reducing_intrest_loan_calc(prncpl_amt, interest_rate, months_time=tenure, save_file=True)
+    st.success("EMI Breakdown calculated and saved as Excel and PDF files successfully!")
     st.dataframe(data=df)
+    with open(pdf_file, "rb") as f:
+        st.download_button(
+            label="Download EMI Breakdown as PDF",
+            data=f,
+            file_name=pdf_file,
+            mime="application/octet-stream"
+        )
     st.markdown("You can find the Excel file in the current working directory.")
 
 
